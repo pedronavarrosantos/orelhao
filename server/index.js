@@ -1,29 +1,69 @@
 require('dotenv').config({ path: '../.env' });
-const fastify = require('fastify')({ logger: true });
-const socketio = require('socket.io');
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const { Pool } = require('pg');
 
-const port = process.env.PORT || 3001;
-const apiKey = process.env.IA_API_KEY;
-
-// 1. Configuração do Socket.io
-// O Socket.io precisa de um servidor HTTP bruto para funcionar, o Fastify fornece isso
-const io = socketio(fastify.server, {
-  cors: {
-    origin: '*', // Permite que qualquer cliente (como nosso app futuro) se conecte
-    methods: ['GET', 'POST']
-  }
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: { origin: '*' }
 });
 
-// 2. Lógica de Conexão do Chat
-io.on('connection', (socket) => {
+// --- CONFIGURAÇÃO DO POSTGRESQL VIA .ENV ---
+const pool = new Pool({
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME, 
+  password: process.env.DB_PASSWORD, 
+  port: 5432,
+});
+
+// Testando a conexão com o banco
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error('❌ Erro ao conectar ao PostgreSQL:', err.stack);
+  } else {
+    console.log('✅ Conectado ao Banco de Dados PostgreSQL!');
+  }
+});
+// ---------------------------------
+
+// Tornamos a conexão 'async' para podermos buscar o histórico no banco
+io.on('connection', async (socket) => {
   console.log('🆕 Novo usuário conectado! ID:', socket.id);
 
-  // Quando o servidor recebe uma mensagem chamada 'chat message'
-  socket.on('chat message', (msg) => {
-    console.log('💬 Mensagem recebida:', msg);
+  try {
+    // 1. BUSCA O HISTÓRICO: Pega as mensagens do banco em ordem de data (ASC = Mais antigas primeiro)
+    const result = await pool.query('SELECT username, text FROM messages ORDER BY created_at ASC');
+    const history = result.rows;
+
+    // 2. ENVIA O HISTÓRICO: Manda as mensagens apenas para o usuário que acabou de conectar
+    // Note que usamos um evento novo chamado 'load history'
+    socket.emit('load history', history.map(msg => ({
+      user: msg.username,
+      text: msg.text
+    })));
     
-    // O servidor reenvia a mensagem para TODOS os usuários conectados
-    io.emit('chat message', msg);
+    console.log(`📜 Histórico enviado para ${socket.id} (${history.length} mensagens)`);
+  } catch (err) {
+    console.error('❌ Erro ao carregar histórico:', err.stack);
+  }
+
+  socket.on('chat message', async (data) => {
+    console.log(`💬 ${data.user}: ${data.text}`);
+
+    try {
+      await pool.query(
+        'INSERT INTO messages (username, text) VALUES ($1, $2)',
+        [data.user, data.text]
+      );
+      console.log('💾 Mensagem salva no banco!');
+    } catch (err) {
+      console.error('❌ Erro ao salvar mensagem no banco:', err.stack);
+    }
+    
+    io.emit('chat message', data);
   });
 
   socket.on('disconnect', () => {
@@ -31,31 +71,13 @@ io.on('connection', (socket) => {
   });
 });
 
-// Rota de teste para o navegador
-fastify.get('/', async (request, reply) => {
-  return { status: 'Orelhão Chat Server Online!', socket_status: 'Ativo' };
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, () => {
+  console.log(`
+--------------------------------------------
+🚀 Servidor Orelhão está online!
+🌐 Acesse em: http://localhost:${PORT}
+🔌 WebSocket: ws://localhost:${PORT}
+--------------------------------------------
+`);
 });
-
-const start = async () => {
-  try {
-    await fastify.listen({ port: port, host: '0.0.0.0' });
-    
-    console.log('\n--------------------------------------------');
-    console.log('🚀 Orelhão Chat Server está rodando!');
-    console.log(`🌐 HTTP: http://localhost:${port}`);
-    console.log(`🔌 WebSocket: ws://localhost:${port}`);
-    
-    if (apiKey) {
-      console.log('✅ Chave de API detectada e pronta para o Bot!');
-    } else {
-      console.log('❌ Erro: Chave de API não encontrada.');
-    }
-    console.log('--------------------------------------------\n');
-    
-  } catch (err) {
-    fastify.log.error(err);
-    process.exit(1);
-  }
-};
-
-start();
