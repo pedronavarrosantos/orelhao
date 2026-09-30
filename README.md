@@ -1,18 +1,18 @@
-# 📞 Orelhão - Plataforma de Comunicação
+# Orelhão - Plataforma de Comunicação
 
 O **Orelhão** é uma plataforma de comunicação inspirada no Discord, focada em prover um ambiente seguro, privado e com funcionalidades avançadas de chat, voz e vídeo para comunidades brasileiras.
 
-## 🚀 Objetivo
+## Objetivo
 Criar um espaço de convivência digital que integre a nostalgia da comunicação brasileira com a tecnologia moderna de agentes de IA e mensageria em tempo real.
 
-## 🛠️ Stack Tecnológica (Planejada)
+## Stack Tecnológica (Planejada)
 - **Frontend:** Next.js / React / Tailwind CSS
 - **Backend:** Node.js / Fastify
 - **Real-time:** Socket.io / WebRTC
 - **Banco de Dados:** PostgreSQL / Redis
 - **IA:** Integração via API (Custom Agents)
 
-## 📌 Funcionalidades Previstas
+## Funcionalidades Previstas
 - [ ] Servidores e Canais (Texto e Voz)
 - [ ] Sistema de Permissões e Cargos
 - [ ] Mensagens em tempo real com histórico
