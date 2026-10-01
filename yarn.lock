@@ -9116,7 +9116,7 @@ __metadata:
     jest: "npm:~30.2.0"
     jest-fetch-mock: "npm:~3.0.3"
     query-string: "npm:^7.1.3"
-    split-on-first: "npm:^3.0.0"
+    split-on-first: "npm:^4.0.0"
     strict-uri-encode: "npm:^2.0.0"
     typescript: "npm:~5.9.3"
   languageName: unknown
@@ -35040,10 +35040,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"split-on-first@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "split-on-first@npm:3.0.0"
-  checksum: 10/75dc27ecbac65cfbeab9a3b90cf046307220192d3d7a30e46aa0f19571cc9b4802aac813f3de2cc9b16f2e46aae72f275659b5d2614bb5369c77724d739e5f73
+"split-on-first@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "split-on-first@npm:4.0.0"
+  checksum: 10/c87761a8c50f55b0a3b317a50679b3c9e27b8ecaa751552a3a7e92eb46315f79d699dcf6ab3b07aee9b9d786bf590776ca594248ea7a5d6d9616b8d3e5d969be
   languageName: node
   linkType: hard
 
