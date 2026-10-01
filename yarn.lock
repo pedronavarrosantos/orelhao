@@ -10455,7 +10455,7 @@ __metadata:
     postis: "npm:^2.2.0"
     prom-client: "npm:^14.2.0"
     prometheus-gc-stats: "npm:^1.1.0"
-    proxy-from-env: "npm:^1.1.0"
+    proxy-from-env: "npm:^2.1.0"
     proxyquire: "npm:^2.1.3"
     psl: "npm:^1.10.0"
     qs: "npm:^6.15.3"
@@ -11077,7 +11077,7 @@ __metadata:
     https-proxy-agent: "npm:^7.0.6"
     jest: "npm:^29.7.0"
     node-fetch: "npm:2.7.0"
-    proxy-from-env: "npm:^1.1.0"
+    proxy-from-env: "npm:^2.1.0"
     typescript: "npm:~5.9.3"
   languageName: unknown
   linkType: soft
