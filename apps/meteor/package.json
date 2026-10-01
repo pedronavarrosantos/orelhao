@@ -284,7 +284,7 @@
 		"postis": "^2.2.0",
 		"prom-client": "^14.2.0",
 		"prometheus-gc-stats": "^1.1.0",
-		"proxy-from-env": "^1.1.0",
+		"proxy-from-env": "^2.1.0",
 		"psl": "^1.10.0",
 		"qs": "^6.15.3",
 		"query-string": "^7.1.3",
