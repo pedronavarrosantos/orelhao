@@ -1,0 +1,85 @@
+import { useStableCallback } from '@rocket.chat/fuselage-hooks';
+import { UiKitContext } from '@rocket.chat/fuselage-ui-kit';
+import { MarkupInteractionContext } from '@rocket.chat/gazzodown';
+import { useUserPreference } from '@rocket.chat/ui-contexts';
+import type * as UiKit from '@rocket.chat/ui-kit';
+import type { FormEvent } from 'react';
+
+import ModalBlock from './ModalBlock';
+import { detectEmoji } from '../../../lib/utils/detectEmoji';
+import { preventSyntheticEvent } from '../../../lib/utils/preventSyntheticEvent';
+import { useModalContextValue } from '../../../uikit/hooks/useModalContextValue';
+import { useUiKitActionManager } from '../../../uikit/hooks/useUiKitActionManager';
+import { useUiKitView } from '../../../uikit/hooks/useUiKitView';
+
+export type UiKitModalProps = {
+	key: UiKit.ModalView['id']; // force re-mount when viewId changes
+	initialView: UiKit.ModalView;
+};
+
+const UiKitModal = ({ initialView }: UiKitModalProps) => {
+	const actionManager = useUiKitActionManager();
+	const { view, errors, values, updateValues, state } = useUiKitView(initialView);
+	const contextValue = useModalContextValue({ view, errors, values, updateValues });
+	const useEmoji = useUserPreference<boolean>('useEmojis', true);
+	const convertAsciiToEmoji = useUserPreference<boolean>('convertAsciiEmoji', true);
+
+	const handleSubmit = useStableCallback((e: FormEvent) => {
+		preventSyntheticEvent(e);
+		void actionManager.emitInteraction(view.appId, {
+			type: 'viewSubmit',
+			payload: {
+				view: {
+					...view,
+					state,
+				},
+			},
+			viewId: view.id,
+		});
+	});
+
+	const handleCancel = useStableCallback((e: FormEvent) => {
+		preventSyntheticEvent(e);
+		void actionManager.emitInteraction(view.appId, {
+			type: 'viewClosed',
+			payload: {
+				viewId: view.id,
+				view: {
+					...view,
+					state,
+				},
+				isCleared: false,
+			},
+		});
+	});
+
+	const handleClose = useStableCallback(() => {
+		void actionManager.emitInteraction(view.appId, {
+			type: 'viewClosed',
+			payload: {
+				viewId: view.id,
+				view: {
+					...view,
+					state,
+				},
+				isCleared: true,
+			},
+		});
+	});
+
+	return (
+		<UiKitContext.Provider value={contextValue}>
+			<MarkupInteractionContext.Provider
+				value={{
+					detectEmoji,
+					useEmoji,
+					convertAsciiToEmoji,
+				}}
+			>
+				<ModalBlock view={view} errors={errors} appId={view.appId} onSubmit={handleSubmit} onCancel={handleCancel} onClose={handleClose} />
+			</MarkupInteractionContext.Provider>
+		</UiKitContext.Provider>
+	);
+};
+
+export default UiKitModal;

@@ -1,0 +1,24 @@
+import '../hooks/auth/callback';
+import './audit';
+import './deviceManagement';
+import './engagementDashboard';
+import './maxRoomsPerGuest';
+import './upsell';
+import './services';
+import './readReceiptsArchive';
+import './mcp';
+import { api } from '@rocket.chat/core-services';
+
+import { isRunningMs } from '../../../server/lib/isRunningMs';
+
+export const registerEEBroker = async (): Promise<void> => {
+	// only starts network broker if running in micro services mode
+	if (isRunningMs()) {
+		const { startBroker } = await import('@rocket.chat/network-broker');
+
+		api.setBroker(startBroker());
+		await api.start();
+	} else {
+		require('./presence');
+	}
+};

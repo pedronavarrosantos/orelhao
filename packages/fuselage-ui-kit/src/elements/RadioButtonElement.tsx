@@ -1,0 +1,27 @@
+import { Box, RadioButton } from '@rocket.chat/fuselage';
+import * as UiKit from '@rocket.chat/ui-kit';
+
+import { useUiKitState } from '../hooks/useUiKitState';
+import type { BlockProps } from '../utils/BlockProps';
+
+export type RadioButtonElementProps = BlockProps<UiKit.RadioButtonElement>;
+
+const RadioButtonElement = ({ block, context, surfaceRenderer }: RadioButtonElementProps) => {
+	const [{ loading, value }, action] = useUiKitState(block, context);
+	const { options } = block;
+
+	return (
+		<Box>
+			{options.map((option: UiKit.Option) => (
+				<Box key={option.value} paddingBlock={4}>
+					<RadioButton disabled={loading} checked={value === option.value} value={option.value} onChange={action} />
+					<Box is='label' paddingInlineStart={8}>
+						{surfaceRenderer.renderTextObject(option.text, 0, UiKit.BlockContext.NONE)}
+					</Box>
+				</Box>
+			))}
+		</Box>
+	);
+};
+
+export default RadioButtonElement;

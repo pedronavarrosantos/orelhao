@@ -1,0 +1,39 @@
+import { States, StatesIcon, StatesTitle, StatesSubtitle, StatesActions, StatesAction, Icon } from '@rocket.chat/fuselage';
+import type { ReactNode } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
+import { useTranslation } from 'react-i18next';
+
+import { useRoom } from '../contexts/RoomContext';
+
+export type MessageListErrorBoundaryProps = { children: ReactNode };
+
+const MessageListErrorBoundary = ({ children }: MessageListErrorBoundaryProps) => {
+	const { t } = useTranslation();
+	const room = useRoom();
+
+	return (
+		<ErrorBoundary
+			resetKeys={[room._id]}
+			fallback={
+				<States>
+					<StatesIcon name='circle-exclamation' variation='danger' />
+					<StatesTitle>{t('Error')}</StatesTitle>
+					<StatesSubtitle>{t('Error_something_went_wrong')}</StatesSubtitle>
+					<StatesActions>
+						<StatesAction
+							onClick={(): void => {
+								location.reload();
+							}}
+						>
+							<Icon name='reload' /> {t('Reload')}
+						</StatesAction>
+					</StatesActions>
+				</States>
+			}
+		>
+			{children}
+		</ErrorBoundary>
+	);
+};
+
+export default MessageListErrorBoundary;

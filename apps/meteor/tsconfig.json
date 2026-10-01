@@ -1,0 +1,56 @@
+{
+	"extends": "@rocket.chat/tsconfig/base.json",
+	"compilerOptions": {
+		"target": "es2018",
+		"module": "esNext",
+		"lib": ["esnext", "dom"],
+
+		"allowJs": true,
+		"checkJs": false,
+		"jsx": "react-jsx",
+		"noEmit": true,
+
+		/* Strict Type-Checking Options */
+		"strictPropertyInitialization": false,
+
+		/* Additional Checks */
+		"noImplicitReturns": false,
+		"noFallthroughCasesInSwitch": false,
+
+		/* Module Resolution Options */
+		"baseUrl": ".",
+		"paths": {
+			/* Support absolute /imports/* with a leading '/' */
+			"/*": ["*"],
+			/* No .meteor/local/types/packages.d.ts fallback: its `export =` module
+			   declarations take over the module identity under TS7 and discard the
+			   ambient merges from @types/meteor and definition/externals. Everything
+			   it declared is covered by @types/meteor + definition/externals. */
+			"meteor/*": ["./node_modules/@types/meteor/*"],
+			"swiper/modules/index.mjs": ["./node_modules/swiper/types/modules/index.d.ts"],
+			"swiper/swiper-react.mjs": ["./node_modules/swiper/swiper-react.d.ts"],
+		},
+		"preserveSymlinks": true,
+
+		// "sourceMap": true,
+		// "declaration": true,
+		// "removeComments": false,
+		// "emitDecoratorMetadata": true,
+		// "experimentalDecorators": true,
+	},
+	"include": ["./**/*", "./.storybook/**/*", "./jest.config.ts", "./.scripts/**/*"],
+	"exclude": [
+		"**/node_modules/**",
+		"./.meteor/**",
+		"./imports/client/**",
+		"**/dist/**",
+		"./public/**",
+		// Node-side build tooling that resolves packages through `exports`, which this app config does not.
+		"./vite/vite.config.mts",
+		"./vite/postcss-plugins.d.ts",
+	],
+	"ts-node": {
+		"files": false,
+		"swc": true,
+	},
+}

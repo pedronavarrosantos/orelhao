@@ -1,0 +1,16 @@
+import { Box, Divider } from '@rocket.chat/fuselage';
+
+import { ChangePassphrase } from './ChangePassphrase';
+import { ResetPassphrase } from './ResetPassphrase';
+
+const EndToEnd = () => {
+	return (
+		<Box display='flex' flexDirection='column' alignItems='flex-start'>
+			<ChangePassphrase />
+			<Divider marginBlock={36} width='full' />
+			<ResetPassphrase />
+		</Box>
+	);
+};
+
+export default EndToEnd;

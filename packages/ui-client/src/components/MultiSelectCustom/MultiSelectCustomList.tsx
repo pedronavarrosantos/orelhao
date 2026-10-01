@@ -1,0 +1,90 @@
+import { Box, CheckBox, Icon, Option, OptionIcon, SearchInput, Tile } from '@rocket.chat/fuselage';
+import type { TranslationKey } from '@rocket.chat/ui-contexts';
+import type { ChangeEvent } from 'react';
+import { Fragment, useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import type { OptionProp } from './MultiSelectCustom';
+import { useFilteredOptions } from './useFilteredOptions';
+
+const getIconColor = (color: 'default' | 'danger' | 'warning' | undefined) => {
+	switch (color) {
+		case 'danger':
+			return 'status-font-on-danger';
+		case 'warning':
+			return 'status-font-on-warning';
+		case 'default':
+		default:
+			return undefined;
+	}
+};
+
+const MultiSelectCustomList = ({
+	options,
+	onSelected,
+	searchBarText,
+}: {
+	options: OptionProp[];
+	onSelected: (item: OptionProp, e?: ChangeEvent<HTMLElement>) => void;
+	searchBarText?: string;
+}) => {
+	const { t } = useTranslation();
+
+	const [text, setText] = useState('');
+
+	const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => setText(event.currentTarget.value), []);
+
+	const filteredOptions = useFilteredOptions(text, options);
+
+	return (
+		<Tile
+			overflow='auto'
+			paddingBlock={12}
+			paddingInline={0}
+			elevation='2'
+			width='full'
+			backgroundColor='light'
+			borderRadius='small'
+			maxHeight='50vh'
+		>
+			{searchBarText && (
+				<Box paddingInline={12} marginBlockEnd={12}>
+					<SearchInput
+						name='select-search'
+						placeholder={t(searchBarText as TranslationKey)}
+						autoComplete='off'
+						endAddon={<Icon name='magnifier' size='x20' />}
+						onChange={handleChange}
+						value={text}
+					/>
+				</Box>
+			)}
+			{filteredOptions.map((option) => (
+				<Fragment key={option.id}>
+					{option.isGroupTitle || !option.hasOwnProperty('checked') ? (
+						<Box marginInline='x10' marginBlock={4} fontScale='p2b' color='default'>
+							{t(option.text as TranslationKey)}
+						</Box>
+					) : (
+						<Option key={option.id}>
+							{option.icon && <OptionIcon name={option.icon.name} color={getIconColor(option.icon.color)} marginInlineEnd={4} />}
+							<Box width='full' display='flex' justifyContent='space-between' is='label'>
+								{t(option.text as TranslationKey)}
+
+								<CheckBox
+									checked={option.checked}
+									paddingInline={0}
+									name={option.text}
+									id={option.id}
+									onChange={() => onSelected(option)}
+								/>
+							</Box>
+						</Option>
+					)}
+				</Fragment>
+			))}
+		</Tile>
+	);
+};
+
+export default MultiSelectCustomList;

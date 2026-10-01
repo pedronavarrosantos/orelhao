@@ -1,0 +1,28 @@
+import { Box, Icon } from '@rocket.chat/fuselage';
+import { useTranslation } from 'react-i18next';
+
+import FeatureUsageCard from '../FeatureUsageCard';
+import FeatureUsageCardBody from '../FeatureUsageCardBody';
+
+export type CountSeatsCardProps = { activeUsers: number };
+
+const CountSeatsCard = ({ activeUsers }: CountSeatsCardProps) => {
+	const { t } = useTranslation();
+
+	return (
+		<FeatureUsageCard
+			card={{
+				title: t('Seats'),
+				infoText: t('CountSeats_InfoText'),
+			}}
+		>
+			<FeatureUsageCardBody>
+				<Box fontScale='h1' display='flex' alignItems='center' justifyContent='center'>
+					<Icon color='font-annotation' name='user' size={40} marginInlineEnd={4} />
+					{activeUsers}
+				</Box>
+			</FeatureUsageCardBody>
+		</FeatureUsageCard>
+	);
+};
+export default CountSeatsCard;

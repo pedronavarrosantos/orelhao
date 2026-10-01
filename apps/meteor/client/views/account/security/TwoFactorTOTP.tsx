@@ -1,0 +1,187 @@
+import { Box, Button, TextInput, Margins, Field, FieldRow, FieldLabel, ToggleSwitch } from '@rocket.chat/fuselage';
+import { useStableCallback, useSafely } from '@rocket.chat/fuselage-hooks';
+import { useSetModal, useToastMessageDispatch, useUser, useEndpoint } from '@rocket.chat/ui-contexts';
+import type { ComponentPropsWithoutRef, ChangeEvent } from 'react';
+import { useState, useCallback, useEffect, useId } from 'react';
+import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import qrcode from 'yaqrcode';
+
+import BackupCodesModal from './BackupCodesModal';
+import TextCopy from '../../../components/TextCopy';
+import TwoFactorTotpModal from '../../../components/TwoFactorModal/TwoFactorTotpModal';
+
+type TwoFactorTOTPFormData = {
+	authCode: string;
+};
+
+export type TwoFactorTOTPProps = ComponentPropsWithoutRef<typeof Box>;
+
+const isInvalidTotpError = (error: unknown): boolean => {
+	const { error: errorCode, errorType } = (error ?? {}) as { error?: string; errorType?: string };
+	return errorCode === 'invalid-totp' || errorType === 'invalid-totp';
+};
+
+const TwoFactorTOTP = (props: TwoFactorTOTPProps) => {
+	const { t } = useTranslation();
+	const dispatchToastMessage = useToastMessageDispatch();
+	const user = useUser();
+	const setModal = useSetModal();
+
+	const enableTotpFn = useEndpoint('POST', '/v1/users.enableTotp');
+	const disableTotpFn = useEndpoint('POST', '/v1/users.disableTotp');
+	const verifyCodeFn = useEndpoint('POST', '/v1/users.validateTotp');
+	const checkCodesRemainingFn = useEndpoint('GET', '/v1/users.totpCodesRemaining');
+	const regenerateCodesFn = useEndpoint('POST', '/v1/users.regenerateTotpCodes');
+
+	const [registeringTotp, setRegisteringTotp] = useSafely(useState(false));
+	const [qrCode, setQrCode] = useSafely(useState<string>());
+	const [totpSecret, setTotpSecret] = useSafely(useState<string>());
+	const [codesRemaining, setCodesRemaining] = useSafely(useState(0));
+
+	const { register, handleSubmit } = useForm<TwoFactorTOTPFormData>({ defaultValues: { authCode: '' } });
+
+	const totpEnabled = user?.services?.totp?.enabled;
+
+	const closeModal = useCallback(() => setModal(null), [setModal]);
+
+	useEffect(() => {
+		const updateCodesRemaining = async (): Promise<void | boolean> => {
+			if (!totpEnabled) {
+				return false;
+			}
+			const result = await checkCodesRemainingFn();
+			setCodesRemaining(result.remaining);
+		};
+		updateCodesRemaining();
+	}, [checkCodesRemainingFn, setCodesRemaining, totpEnabled]);
+
+	const enableTotp = useStableCallback(async () => {
+		try {
+			const result = await enableTotpFn();
+
+			setTotpSecret(result.secret);
+			setQrCode(qrcode(result.url, { size: 200 }));
+
+			setRegisteringTotp(true);
+		} catch (error) {
+			dispatchToastMessage({ type: 'error', message: error });
+		}
+	});
+
+	const disableTotp = useStableCallback(async () => {
+		if (!totpEnabled) {
+			setRegisteringTotp(false);
+
+			return;
+		}
+
+		const onDisable = async (authCode: string): Promise<void> => {
+			try {
+				const { disabled } = await disableTotpFn({ code: authCode });
+
+				if (!disabled) {
+					dispatchToastMessage({ type: 'error', message: t('Invalid_two_factor_code') });
+
+					return;
+				}
+
+				dispatchToastMessage({ type: 'success', message: t('Two-factor_authentication_disabled') });
+			} catch (error) {
+				dispatchToastMessage({ type: 'error', message: error });
+			}
+
+			closeModal();
+		};
+
+		setModal(<TwoFactorTotpModal onConfirm={onDisable} onClose={closeModal} />);
+	});
+
+	const handleToggleTotp = useStableCallback(async (e: ChangeEvent<HTMLInputElement>) => {
+		if (e.currentTarget?.checked) {
+			void enableTotp();
+		} else {
+			void disableTotp();
+		}
+	});
+
+	const totpId = useId();
+	const totpCodeId = useId();
+
+	const handleVerifyCode = useCallback(
+		async ({ authCode }: TwoFactorTOTPFormData) => {
+			try {
+				const result = await verifyCodeFn({ code: authCode });
+
+				setRegisteringTotp(false);
+				setModal(<BackupCodesModal codes={result.codes} onClose={closeModal} />);
+
+				dispatchToastMessage({ type: 'success', message: t('Two-factor_authentication_enabled') });
+			} catch (error) {
+				if (isInvalidTotpError(error)) {
+					return dispatchToastMessage({ type: 'error', message: t('Invalid_two_factor_code') });
+				}
+				dispatchToastMessage({ type: 'error', message: error });
+			}
+		},
+		[closeModal, dispatchToastMessage, setModal, t, verifyCodeFn, setRegisteringTotp],
+	);
+
+	const handleRegenerateCodes = useCallback(() => {
+		const onRegenerate = async (authCode: string): Promise<void> => {
+			try {
+				const { codes } = await regenerateCodesFn({ code: authCode });
+
+				setModal(<BackupCodesModal codes={codes} onClose={closeModal} />);
+			} catch (error) {
+				if (isInvalidTotpError(error)) {
+					return dispatchToastMessage({ type: 'error', message: t('Invalid_two_factor_code') });
+				}
+				dispatchToastMessage({ type: 'error', message: error });
+			}
+		};
+
+		setModal(<TwoFactorTotpModal onDismiss={() => undefined} onConfirm={onRegenerate} onClose={closeModal} />);
+	}, [closeModal, dispatchToastMessage, setModal, regenerateCodesFn, t]);
+
+	return (
+		<Box display='flex' flexDirection='column' alignItems='flex-start' {...props}>
+			<Margins blockEnd={8}>
+				<Field>
+					<FieldRow>
+						<FieldLabel htmlFor={totpId}>{t('Two-factor_authentication_via_TOTP')}</FieldLabel>
+						<ToggleSwitch id={totpId} checked={registeringTotp || totpEnabled} onChange={handleToggleTotp} />
+					</FieldRow>
+				</Field>
+				{!totpEnabled && registeringTotp && (
+					<>
+						<Box>{t('Scan_QR_code')}</Box>
+						<Box>{t('Scan_QR_code_alternative_s')}</Box>
+						<TextCopy text={totpSecret || ''} />
+						<Box marginInlineStart='-16px' marginBlock='-16px' is='img' size='x200' src={qrCode} aria-hidden='true' />
+						<Field>
+							<FieldLabel htmlFor={totpCodeId}>{t('Enter_code_provided_by_authentication_app')}</FieldLabel>
+							<FieldRow>
+								<TextInput id={totpCodeId} marginInlineEnd='8px' {...register('authCode')} />
+								<Button primary onClick={handleSubmit(handleVerifyCode)}>
+									{t('Verify')}
+								</Button>
+							</FieldRow>
+						</Field>
+					</>
+				)}
+				{totpEnabled && (
+					<>
+						<Box fontScale='p2m' marginBlockStart={8}>
+							{t('Backup_codes')}
+						</Box>
+						<Box color='font-secondary-info'>{t('You_have_n_codes_remaining', { number: codesRemaining })}</Box>
+						<Button onClick={handleRegenerateCodes}>{t('Regenerate_codes')}</Button>
+					</>
+				)}
+			</Margins>
+		</Box>
+	);
+};
+
+export default TwoFactorTOTP;

@@ -1,0 +1,28 @@
+import { Box, Icon } from '@rocket.chat/fuselage';
+import { useTranslation } from 'react-i18next';
+
+import FeatureUsageCard from '../FeatureUsageCard';
+import FeatureUsageCardBody from '../FeatureUsageCardBody';
+
+export type CountMACCardProps = { macsCount: number };
+
+const CountMACCard = ({ macsCount }: CountMACCardProps) => {
+	const { t } = useTranslation();
+
+	return (
+		<FeatureUsageCard
+			card={{
+				title: t('Monthly_active_contacts'),
+				infoText: t('CountMAC_InfoText'),
+			}}
+		>
+			<FeatureUsageCardBody>
+				<Box fontScale='h1'>
+					<Icon color='font-annotation' name='headset' size={40} marginInlineEnd={4} />
+					{macsCount}
+				</Box>
+			</FeatureUsageCardBody>
+		</FeatureUsageCard>
+	);
+};
+export default CountMACCard;

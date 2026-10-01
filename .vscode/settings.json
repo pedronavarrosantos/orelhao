@@ -1,0 +1,20 @@
+{
+	"typescript.tsdk": "./node_modules/typescript/lib",
+	"cSpell.words": [
+		"autotranslate",
+		"ciphertext",
+		"Contextualbar",
+		"fname",
+		"Gazzodown",
+		"katex",
+		"listbox",
+		"livechat",
+		"oauthapps",
+		"omnichannel",
+		"photoswipe",
+		"proxify",
+		"searchbox",
+		"tmid",
+		"tshow"
+	]
+}

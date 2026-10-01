@@ -1,0 +1,37 @@
+import { Box, PaletteStyleTag, States, StatesAction, StatesActions, StatesIcon, StatesSubtitle, StatesTitle } from '@rocket.chat/fuselage';
+import { useThemeMode } from '@rocket.chat/ui-client';
+
+const AppErrorPage = () => {
+	const theme = useThemeMode();
+
+	return (
+		<>
+			<PaletteStyleTag theme={theme} tagId='app-error-palette' />
+			<Box display='flex' justifyContent='center' height='full' backgroundColor='surface'>
+				<States>
+					<StatesIcon name='error-circle' />
+					<StatesTitle>Application Error</StatesTitle>
+					<StatesSubtitle>The application GUI just crashed.</StatesSubtitle>
+
+					<StatesActions>
+						<StatesAction
+							onClick={() => {
+								const result = indexedDB.deleteDatabase('MeteorDynamicImportCache');
+								const reload = () => {
+									window.location.reload();
+								};
+								result.onsuccess = reload;
+								result.onerror = reload;
+								result.onblocked = reload;
+							}}
+						>
+							Reload Application
+						</StatesAction>
+					</StatesActions>
+				</States>
+			</Box>
+		</>
+	);
+};
+
+export default AppErrorPage;

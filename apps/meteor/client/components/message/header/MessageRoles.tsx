@@ -1,0 +1,22 @@
+import { MessageRole, MessageRoles as FuselageMessageRoles } from '@rocket.chat/fuselage';
+import { useTranslation } from 'react-i18next';
+
+export type MessageRolesProps = {
+	roles: Array<string>;
+	isBot?: boolean;
+};
+
+const MessageRoles = ({ roles, isBot }: MessageRolesProps) => {
+	const { t } = useTranslation();
+
+	return (
+		<FuselageMessageRoles>
+			{roles.map((role, index) => (
+				<MessageRole key={index}>{role}</MessageRole>
+			))}
+			{isBot && <MessageRole>{t('Bot')}</MessageRole>}
+		</FuselageMessageRoles>
+	);
+};
+
+export default MessageRoles;
