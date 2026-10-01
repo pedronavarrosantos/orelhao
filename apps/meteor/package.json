@@ -313,7 +313,7 @@
 		"stylis": "~4.4.0",
 		"swagger-ui-express": "^5.0.1",
 		"swc-plugin-coverage-instrument": "0.0.32",
-		"swiper": "12.1.4",
+		"swiper": "14.3.0",
 		"textarea-caret": "^3.1.0",
 		"tinykeys": "^1.4.0",
 		"tsyringe": "^4.10.0",

@@ -10496,7 +10496,7 @@ __metadata:
     supports-color: "npm:~7.2.0"
     swagger-ui-express: "npm:^5.0.1"
     swc-plugin-coverage-instrument: "npm:0.0.32"
-    swiper: "npm:12.1.4"
+    swiper: "npm:14.3.0"
     template-file: "npm:^6.0.1"
     textarea-caret: "npm:^3.1.0"
     tinykeys: "npm:^1.4.0"
@@ -35834,10 +35834,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"swiper@npm:12.1.4":
-  version: 12.1.4
-  resolution: "swiper@npm:12.1.4"
-  checksum: 10/735e6fedcc26264636b47e50748edea857339445a1d07687e79752df03c0c8810d0a2844ba5806498ca7374b8ee8943b8004938f523739247e6a3a2687c18923
+"swiper@npm:14.3.0":
+  version: 14.3.0
+  resolution: "swiper@npm:14.3.0"
+  checksum: 10/556ccd3ff046dd9913f33e8e7bd20aa8004a6c406803eb03849cdb6d44d350aaa8d663559709dbb8d74c412cb23a1de658483608539b3d271edf6e9fe0dd379b
   languageName: node
   linkType: hard
 
