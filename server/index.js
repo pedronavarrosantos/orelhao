@@ -67,7 +67,7 @@ app.post('/register', async (req, res) => {
 });
 
 app.post('/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, deviceToken } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'Campos obrigatórios!' });
   try {
     const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
@@ -75,6 +75,15 @@ app.post('/login', async (req, res) => {
     const user = result.rows[0];
     if (!(await bcrypt.compare(password, user.password_hash))) return res.status(401).json({ error: 'Senha incorreta!' });
     if (!user.is_verified) return res.status(403).json({ error: 'Conta não verificada!' });
+
+    if (deviceToken) {
+      const trustResult = await pool.query('SELECT * FROM trusted_devices WHERE device_token = $1 AND user_id = $2', [deviceToken, user.id]);
+      if (trustResult.rows.length > 0) {
+        const token = jwt.sign({ userId: user.id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        return res.status(200).json({ message: 'Sucesso!', userId: user.id, username: user.username, token });
+      }
+    }
+
     const twoFactorCode = Math.floor(100000 + Math.random() * 900000).toString();
     await pool.query('UPDATE users SET two_factor_code = $1 WHERE username = $2', [twoFactorCode, username]);
     await transporter.sendMail({
@@ -90,7 +99,7 @@ app.post('/login', async (req, res) => {
 });
 
 app.post('/verify-2fa', async (req, res) => {
-  const { username, code } = req.body;
+  const { username, code, trustDevice } = req.body;
   try {
     const result = await pool.query('SELECT id, username, two_factor_code FROM users WHERE username = $1', [username]);
     if (result.rows.length === 0 || result.rows[0].two_factor_code !== code) {
@@ -98,8 +107,15 @@ app.post('/verify-2fa', async (req, res) => {
     }
     const user = result.rows[0];
     await pool.query('UPDATE users SET two_factor_code = NULL WHERE username = $1', [username]);
+    
+    let deviceToken = null;
+    if (trustDevice) {
+      deviceToken = crypto.randomBytes(32).toString('hex');
+      await pool.query('INSERT INTO trusted_devices (user_id, device_token) VALUES ($1, $2)', [user.id, deviceToken]);
+    }
+
     const token = jwt.sign({ userId: user.id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.status(200).json({ message: 'Sucesso!', userId: user.id, username: user.username, token });
+    res.status(200).json({ message: 'Sucesso!', userId: user.id, username: user.username, token, deviceToken });
   } catch (err) {
     res.status(500).json({ error: 'Erro interno.' });
   }

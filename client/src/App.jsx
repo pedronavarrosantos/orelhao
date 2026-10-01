@@ -39,6 +39,12 @@ const modalCancelButtonStyle = { padding: '10px 20px', backgroundColor: 'transpa
 
 const scrollButtonStyle = { position: 'absolute', bottom: '80px', right: '20px', width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#00d1ff', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.3)', fontSize: '18px', zIndex: 10 };
 
+const versionContainerStyle = { marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#b5bac1', fontSize: '12px', paddingBottom: '12px' };
+const miniLogoStyle = { width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' };
+
+const trustContainerStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#b5bac1', fontSize: '13px', marginBottom: '20px', cursor: 'pointer' };
+const checkboxStyle = { width: '16px', height: '16px', cursor: 'pointer', accentColor: '#00d1ff' };
+
 function App() {
   const [userId, setUserId] = useState('');
   const [username, setUsername] = useState('');
@@ -46,6 +52,7 @@ function App() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [trustDevice, setTrustDevice] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [isWaitingFor2FA, setIsWaitingFor2FA] = useState(false);
@@ -238,10 +245,11 @@ function App() {
       return;
     }
     try {
+      const deviceToken = localStorage.getItem('orelhao_device_token');
       const response = await fetch('http://localhost:3001/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, deviceToken }),
       });
       const data = await response.json();
       if (response.ok) {
@@ -249,6 +257,9 @@ function App() {
           alert('🔑 Senha correta! Agora digite o código enviado ao seu e-mail.');
           setIsWaitingFor2FA(true);
         } else {
+          localStorage.setItem('orelhao_token', data.token);
+          setUserId(data.userId);
+          setUsername(data.username);
           setIsLoggedIn(true);
         }
       } else {
@@ -269,11 +280,14 @@ function App() {
       const response = await fetch('http://localhost:3001/verify-2fa', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, code: twoFactorCode }),
+        body: JSON.stringify({ username, code: twoFactorCode, trustDevice }),
       });
       const data = await response.json();
       if (response.ok) {
         localStorage.setItem('orelhao_token', data.token);
+        if (data.deviceToken) {
+          localStorage.setItem('orelhao_device_token', data.deviceToken);
+        }
         setUserId(data.userId);
         setUsername(data.username);
         setIsLoggedIn(true);
@@ -310,7 +324,13 @@ function App() {
             {isWaitingFor2FA ? 'Autenticação de Dois Fatores' : (isRegistering ? 'Crie sua conta agora' : 'Bem-vindo de volta!')}
           </p>
           {isWaitingFor2FA ? (
-            <input type="text" value={twoFactorCode} onChange={(e) => setTwoFactorCode(e.target.value)} placeholder="Código de 6 dígitos" style={inputStyle2FA} />
+            <>
+              <input type="text" value={twoFactorCode} onChange={(e) => setTwoFactorCode(e.target.value)} placeholder="Código de 6 dígitos" style={inputStyle2FA} />
+              <div style={trustContainerStyle}>
+                <input type="checkbox" style={checkboxStyle} checked={trustDevice} onChange={(e) => setTrustDevice(e.target.checked)} id="trustDevice" />
+                <label htmlFor="trustDevice">Lembrar deste dispositivo</label>
+              </div>
+            </>
           ) : (
             <>
               <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Nome de usuário" style={inputStyle} />
@@ -346,7 +366,10 @@ function App() {
           </div>
         ))}
         <div style={serverIconStyle(false)} onClick={() => setIsServerModalOpen(true)}>+</div>
-        <div style={{ marginTop: 'auto', color: '#b5bac1', fontSize: '12px', textAlign: 'center' }}>v1.0</div>
+        <div style={versionContainerStyle}>
+          <span>v1.0</span>
+          <img src="/logo.png" alt="Logo" style={miniLogoStyle} />
+        </div>
       </div>
       <div style={channelSidebarStyle}>
         <div style={channelHeaderStyle}>
