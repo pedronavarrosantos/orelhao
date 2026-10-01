@@ -51,7 +51,7 @@
 		"eslint": "~10.7.0",
 		"fast-check": "^4.6.0",
 		"jest": "~30.2.0",
-		"peggy": "4.1.1",
+		"peggy": "5.1.0",
 		"tinybench": "^3.0.7",
 		"ts-loader": "~9.5.7",
 		"ts-node": "~10.9.2",
